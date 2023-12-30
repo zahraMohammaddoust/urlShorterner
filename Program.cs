@@ -1,9 +1,10 @@
-using urlShorterner.Interfaces;
+using urlShorterner.Repository;
+using urlShorterner.Repository.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<IUrlShortenerService, UrlShortenerService>();
+builder.Services.AddSingleton<IUrlShortenerService, UrlShorternerServiceRepository>();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();

@@ -1,32 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System;
 using urlShorterner;
-using urlShorterner.Interfaces;
-
-public class UrlShortenerService : IUrlShortenerService
-{
-    private readonly Dictionary<string, string> urlMappings = new Dictionary<string, string>();
-
-    public bool TryGetLongUrl(string shortKey, out string longUrl)
-    {
-        return urlMappings.TryGetValue(shortKey, out longUrl);
-    }
-
-    public void AddUrlMapping(string shortKey, string longUrl)
-    {
-        urlMappings.Add(shortKey, longUrl);
-    }
-}
+using urlShorterner.Repository.Interfaces;
 
 [Route("api/[controller]")]
 [ApiController]
 public class UrlShortenerController : ControllerBase
 {
-    private readonly IUrlShortenerService urlShortenerService;
+    private readonly IUrlShortenerService UrlShorternerServiceRepository;
 
-    public UrlShortenerController(IUrlShortenerService urlShortenerService)
+    public UrlShortenerController(IUrlShortenerService UrlShorternerServiceRepository)
     {
-        this.urlShortenerService = urlShortenerService ?? throw new ArgumentNullException(nameof(urlShortenerService));
+        this.UrlShorternerServiceRepository = UrlShorternerServiceRepository ?? throw new ArgumentNullException(nameof(UrlShorternerServiceRepository));
     }
 
     [HttpPost]
@@ -35,6 +19,7 @@ public class UrlShortenerController : ControllerBase
         bool Execution = true;
         string WarningMessage = "";
         string shortUrl = "";
+        string shortKey = null;
 
         if (Execution)
         {
@@ -45,7 +30,7 @@ public class UrlShortenerController : ControllerBase
             }
 
         }
-        string shortKey = null;
+        
         if (request.ShortUrl != null)
         {
             shortKey = request.ShortUrl;
@@ -56,7 +41,7 @@ public class UrlShortenerController : ControllerBase
         }
         if (Execution)
         {
-            var hasShortKey = urlShortenerService.TryGetLongUrl(shortKey, out var longUrl);
+            var hasShortKey = UrlShorternerServiceRepository.TryGetLongUrl(shortKey, out var longUrl);
             if (hasShortKey)
             {
                 WarningMessage = "this short url is used, please choose another short url.";
@@ -68,7 +53,7 @@ public class UrlShortenerController : ControllerBase
         {
             try
             {
-                urlShortenerService.AddUrlMapping(shortKey, request.LongUrl);
+                UrlShorternerServiceRepository.AddUrlMapping(shortKey, request.LongUrl);
 
                  shortUrl = $"{Request.Scheme}://{Request.Host}/api/UrlShortener/{shortKey}";
             }
@@ -91,7 +76,7 @@ public class UrlShortenerController : ControllerBase
     [HttpGet("{shortKey}")]
     public ActionResult RedirectUrl(string shortKey)
     {
-        if (urlShortenerService.TryGetLongUrl(shortKey, out var longUrl))
+        if (UrlShorternerServiceRepository.TryGetLongUrl(shortKey, out var longUrl))
         {
             return new RedirectResult(longUrl);
         }
